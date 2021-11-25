@@ -7,9 +7,9 @@ import { Button } from "../../components/Form/Button";
 import { InputFrom, FormDataProps } from "../../components/Form/InputFrom";
 import { CategorySelectButton } from "../../components/Form/CategorySelectButton";
 import { TransactionTypeButton } from "../../components/Form/TransactionTypeButton";
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import uuid from 'react-native-uuid'
-import {useNavigation} from '@react-navigation/native'
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import uuid from "react-native-uuid";
+import { useNavigation } from "@react-navigation/native";
 
 import { CategorySelect } from "../CategorySelect";
 
@@ -21,6 +21,7 @@ import {
   Filds,
   TransactionTypes,
 } from "./styles";
+import { useAuth } from "../../Hooks/auth";
 
 interface FormData {
   name: string;
@@ -28,8 +29,8 @@ interface FormData {
 }
 
 type NavigationProps = {
-  navigate:(screen:string) => void;
-}
+  navigate: (screen: string) => void;
+};
 
 const schema = Yup.object({
   name: Yup.string()
@@ -49,7 +50,9 @@ export function Register() {
     name: "Categoria",
   });
 
-  const dataKey = '@gofinance:transaction';
+  const {user} =  useAuth()
+
+  const dataKey = `@gofinance:transaction_user:${user.id}`;
   const navigation = useNavigation<NavigationProps>();
 
   const {
@@ -58,8 +61,6 @@ export function Register() {
     reset,
     formState: { errors },
   } = useForm<FormDataProps>({ resolver: yupResolver(schema) });
-
-  
 
   function handleTransactionTypeSelect(type: "positive" | "negative") {
     setTransactionType(type);
@@ -87,34 +88,27 @@ export function Register() {
       category: category.key,
       date: new Date(),
     };
-    
+
     try {
       const data = await AsyncStorage.getItem(dataKey);
       const currentData = data ? JSON.parse(data) : [];
 
-      const dataFormatted =[
-        ...currentData,
-        newTransaction
-      ]
-      
+      const dataFormatted = [...currentData, newTransaction];
 
       await AsyncStorage.setItem(dataKey, JSON.stringify(dataFormatted));
 
       reset();
-      setTransactionType('');
+      setTransactionType("");
       setCategory({
         key: "Category",
         name: "Categoria",
       });
 
-      navigation.navigate('Listagem')
-      
-
+      navigation.navigate("Listagem");
     } catch (error) {
       console.log(error);
-      Alert.alert("Não foi possivel salvar")
+      Alert.alert("Não foi possivel salvar");
     }
-
   }
 
   return (

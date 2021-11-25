@@ -1,5 +1,6 @@
 import React , { createContext, ReactNode, useContext, useState } from "react";
 import * as AuthSession from 'expo-auth-session';
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 
 interface AuthProviderProps {
@@ -15,7 +16,9 @@ interface User {
 
 interface AuthContextData {
   user: User;
-  SignInWithGoogle(): Promise<void>  
+  SignInWithGoogle(): Promise<void> 
+  SignInWithApple(): Promise<void> 
+  SingOut(): Promise<void> 
 }
 
 interface AuthorizationResponse {
@@ -46,9 +49,8 @@ function AuthProvider({ children }:AuthProviderProps) {
       if(type === "success") {
         const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?alt=json&access_token=${params.access_token}`)
         const userInfo = await response.json();
-
         setUser({
-          id: userInfo.id,
+          id: userInfo.sub,
           email: userInfo.email,
           name:userInfo.name,
           photo:userInfo.picture 
@@ -60,8 +62,39 @@ function AuthProvider({ children }:AuthProviderProps) {
     }
   }
 
+  
+  async function SignInWithApple() {
+    try {
+      const credencial = await AppleAuthentication.signInAsync({
+        requestedScopes:[
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ]
+      })
+
+      if (credencial) {
+        const name = credencial.fullName!.givenName!
+        const photo = `https://ui-avatars.com/api/?name=${name}&length=1`
+        const UserLogged ={
+          id: String(credencial.user),
+          email: credencial.email!,
+          name,
+          photo
+        }
+        setUser(UserLogged);
+      }
+
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  async function SingOut() {
+    setUser({} as User)
+  }
+
   return (
-  <AuthContex.Provider value={{user, SignInWithGoogle}}>
+  <AuthContex.Provider value={{user, SignInWithGoogle, SignInWithApple,SingOut}}>
     { children }
   </AuthContex.Provider>
   )

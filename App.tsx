@@ -11,10 +11,8 @@ import {
 } from "@expo-google-fonts/poppins";
 
 import theme from "./src/global/styles/theme";
-import { NavigationContainer } from "@react-navigation/native";
-import {AppRoutes} from './src/routes/apptoutes'
+import {Routes} from './src/routes'
 
-import {Signin} from './src/screens/Signin'
 import {AuthProvider} from './src/Hooks/auth'
 
 export default function App() {
@@ -30,12 +28,10 @@ export default function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <NavigationContainer  >
         <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
         <AuthProvider>
-          <Signin />
+          <Routes />
         </AuthProvider>        
-      </NavigationContainer>
     </ThemeProvider>
   );
 }
